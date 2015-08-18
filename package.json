@@ -1,0 +1,30 @@
+{
+  "name": "bubbles",
+  "version": "0.1.0",
+  "description": "Decentralized data storage",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha test/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nicola/bubbles.git"
+  },
+  "keywords": [
+    "linked",
+    "data",
+    "ldnode",
+    "ldp",
+    "solid",
+    "decentralized",
+    "distributed"
+  ],
+  "author": "Nicola Greco <me@nicola.io> (http://nicolagreco.com/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nicola/bubbles/issues"
+  },
+  "homepage": "https://github.com/nicola/bubbles",
+  "dependencies": {
+  }
+}
