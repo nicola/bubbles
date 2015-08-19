@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Bubbles</title>
+</head>
+<body>
+
+<script type="text/javascript">
+  if (typeof require !== 'function') {
+    // If we are in a web env
+    var script = document.createElement('script')
+    script.src = 'bundle.js'
+    document.currentScript.parentNode.insertBefore(script, document.currentScript)
+  } else {
+    // If we are in the electron env
+    alert('not supported yet')
+  }
+</script>
+</body>
+</html>

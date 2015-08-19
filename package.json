@@ -4,7 +4,9 @@
   "description": "Decentralized data storage",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/"
+    "test": "",
+    "build-js": "browserify client | uglifyjs -m > static/bundle.js",
+    "watch-js": "watchify client -o static/bundle.js -dv"
   },
   "repository": {
     "type": "git",
@@ -26,5 +28,15 @@
   },
   "homepage": "https://github.com/nicola/bubbles",
   "dependencies": {
+    "jsonld": "^0.3.24",
+    "rdf-ext": "^0.2.6",
+    "rdfstore": "^0.9.7",
+    "virtual-dom": "^2.1.1",
+    "xhr": "^2.0.3"
+  },
+  "devDependencies": {
+    "browserify": "^11.0.1",
+    "uglify-js": "^2.4.24",
+    "watchify": "^3.3.1"
   }
 }
