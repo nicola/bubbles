@@ -12,7 +12,7 @@ var Bubbles = require('../lib/elements/bubbles')
 var Users = require('../lib/elements/users')
 var Status = require('../lib/elements/status')
 var webidLogin = require('../lib/webid-utils').loginTLS
-var webidGetProfile = require('../lib/webid-utils').getProfile
+var webidGet = require('../lib/webid-utils').get
 
 inherits(App, EventEmitter)
 function App (el, currentWindow) {
@@ -60,9 +60,10 @@ function App (el, currentWindow) {
       self.data.webid = webid
 
       // Get user profile
-      webidGetProfile(self.data.webid, function (err, profile) {
+      webidGet(self.data.webid, function (err, profile) {
         if (err) return console.error(err)
-        self.data.username = profile['http://xmlns.com/foaf/0.1/name']
+        self.data.username = profile.match(webid, 'http://xmlns.com/foaf/0.1/name').toArray()[0].object.valueOf()
+        console.log(profile.match(webid, 'http://xmlns.com/foaf/0.1/name').toArray()[0].object.valueOf())
         render()
       })
     }
