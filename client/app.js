@@ -12,7 +12,7 @@ var Bubbles = require('../lib/elements/bubbles')
 var Users = require('../lib/elements/users')
 var Status = require('../lib/elements/status')
 var webidLogin = require('../lib/webid-utils').loginTLS
-var webidGet = require('../lib/webid-utils').get
+var webidGet = require('webid-get')
 
 inherits(App, EventEmitter)
 function App (el, currentWindow) {

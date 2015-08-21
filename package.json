@@ -31,6 +31,7 @@
     "async": "^1.4.2",
     "rdf-ext": "^0.2.6",
     "virtual-dom": "^2.1.1",
+    "webid-get": "^0.1.1",
     "xhr": "^2.0.3"
   },
   "devDependencies": {
