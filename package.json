@@ -6,7 +6,7 @@
   "scripts": {
     "test": "standard",
     "build": "npm run build-css && npm run build-js",
-    "build-css": "stylus -u nib css/main.styl -o static/ -c",
+    "build-css": "stylus -u nib css/app.styl -o static/ -c",
     "build-js": "browserify client | uglifyjs -m > static/bundle.js",
     "watch": "npm run watch-css & npm run watch-js",
     "watch-js": "watchify client -o static/bundle.js -dv",
