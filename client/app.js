@@ -13,6 +13,7 @@ var Users = require('../lib/elements/users')
 var Status = require('../lib/elements/status')
 var webidLogin = require('../lib/webid-utils').loginTLS
 var webidGet = require('webid-get')
+var containersGet = require('../lib/container-utils').get
 
 inherits(App, EventEmitter)
 function App (el, currentWindow) {
@@ -51,24 +52,45 @@ function App (el, currentWindow) {
 
   // Authenticate with webid
   webidLogin(function (err, webid) {
-    if (err || !webid) self.emit('webidError')
+    if (err || !webid) self.emit('webid-error')
     if (err) {
       return console.error(err.message || err)
     }
 
     if (webid) {
       self.data.webid = webid
-
-      // Get user profile
-      webidGet(self.data.webid, function (err, profile) {
-        if (err) return console.error(err)
-        self.data.username = profile.match(webid, 'http://xmlns.com/foaf/0.1/name').toArray()[0].object.valueOf()
-        console.log(profile.match(webid, 'http://xmlns.com/foaf/0.1/name').toArray()[0].object.valueOf())
-        render()
-      })
+      return self.emit('webid-logged-in')
     }
 
-    render()
+  })
+
+  self.on('webid-logged-in', function () {
+
+    // Get user profile
+    webidGet(self.data.webid, function (err, profile) {
+      if (err) return console.error(err)
+
+      // Setting username
+      self.data.username = profile
+        .match(self.data.webid, 'http://xmlns.com/foaf/0.1/name')
+        .toArray()[0]
+        .object.valueOf()
+
+      render()
+
+      // Setting storage
+      var storage = profile
+        .match(undefined, 'http://www.w3.org/ns/pim/space#storage')
+        .toArray()[0]
+        .object.valueOf()
+
+      containersGet(storage, function (err, containers) {
+        if (err) return console.error(err)
+        self.data.bubbles = containers.toArray()
+        render()
+      })
+
+    })
   })
 
 }
