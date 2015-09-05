@@ -97,6 +97,8 @@ function App (el, currentWindow) {
     webidGet(self.data.webid, function (err, profile) {
       if (err) return console.error(err)
 
+      self.data.profile = profile
+
       // Setting username
       self.data.username = profile
         .match(self.data.webid, 'http://xmlns.com/foaf/0.1/name')
@@ -124,18 +126,41 @@ App.prototype.render = function () {
   var data = self.data
 
   var top = null
+  var backgroundImage = null
+  var avatar = null
+
   if (data.activeBubble) {
     top = getName(data.activeBubble)
+  } else if (!data.webid) {
+    top = 'Logging in'
   } else if (data.username) {
     top = 'Hello ' + data.username.split(' ')[0]
+
+    backgroundImage = data.profile
+      .match(undefined, 'http://www.w3.org/ns/ui#backgroundImage')
+      .toArray()[0]
+
+    if (backgroundImage) {
+      backgroundImage = backgroundImage.object.valueOf()
+    }
+
+    avatar = data.profile
+      .match(undefined, 'http://xmlns.com/foaf/0.1/img')
+      .toArray()[0]
+
+    if (avatar) {
+      avatar = avatar.object.valueOf()
+    }
   }
 
   return h('div.layout', [
     h('.top', [
-      views.status.render(top)
+      views.status.render(top, backgroundImage, avatar)
     ]),
     h('.content', [
-      views.bubbles.render(data.bubbles, data.users)
+      h('.bubbles', [
+        views.bubbles.render(data.bubbles, data.users)
+      ])
     ])
   ])
 }
