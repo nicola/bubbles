@@ -14,6 +14,7 @@ var Status = require('../lib/elements/status')
 var webidLogin = require('../lib/webid-utils').loginTLS
 var webidGet = require('webid-get')
 var containersGet = require('../lib/container-utils').get
+var getName = require('../lib/container-utils').getName
 var page = require('page')
 
 inherits(App, EventEmitter)
@@ -40,20 +41,27 @@ function App (el, currentWindow) {
 
   // Router
   page.base(window.location.pathname)
-  page('/', function (ctx) {
-    self.on('webid-retrieved', function () {
+  self.on('webid-retrieved', function () {
+
+    page('/', function (ctx) {
       page(self.data.storage)
     })
-  })
-  page('*', function (ctx) {
-    console.log(ctx.path)
-    containersGet(ctx.path, function (err, containers) {
-      if (err) return console.error(err)
-      self.data.bubbles = containers.toArray()
-      render()
+    page('*', function (ctx) {
+      self.data.activeBubble = null
+      containersGet(ctx.path, function (err, containers) {
+        if (err) return console.error(err)
+        self.data.bubbles = containers.toArray()
+
+        console.log(self.data.storage, ctx.path)
+        if (self.data.storage !== ctx.path) {
+          self.data.activeBubble = self.data.bubbles[0]
+        }
+
+        render()
+      })
     })
+    page.start({ hashbang: true })
   })
-  page.start({ hashbang: true })
 
   // Initial DOM tree render
   var tree = self.render()
@@ -115,9 +123,16 @@ App.prototype.render = function () {
   var views = self.views
   var data = self.data
 
+  var top = null
+  if (data.activeBubble) {
+    top = getName(data.activeBubble)
+  } else if (data.username) {
+    top = 'Hello ' + data.username.split(' ')[0]
+  }
+
   return h('div.layout', [
     h('.top', [
-      views.status.render(data.username)
+      views.status.render(top)
     ]),
     h('.content', [
       views.bubbles.render(data.bubbles, data.users)

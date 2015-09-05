@@ -1,7 +1,29 @@
 @import 'nib'
 
-.bubble
-  border: 1px solid #000
+global-reset()
+
+body
+  font-family: sans-serif
+  font-weight: 100
+
+.layout
+  width: 600px
+  margin: 0 auto
+
+.status
+  .username
+    font-size: 3em
+    text-align: center
+    margin: 2em 0
+
+.content
+  display: flex
+  flex-wrap: wrap
+  .bubble
+    flex-grow: 1
+    flex-shrink: 0
+    border: 1px solid #000
+    width: 20%
 
 .sphere
   width: 40px
