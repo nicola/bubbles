@@ -33,6 +33,7 @@
   "homepage": "https://github.com/nicola/bubbles",
   "dependencies": {
     "async": "^1.4.2",
+    "page": "^1.6.3",
     "rdf-ext": "^0.2.6",
     "rdf-store-ldp": "^0.1.1",
     "virtual-dom": "^2.1.1",

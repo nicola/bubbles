@@ -14,6 +14,7 @@ var Status = require('../lib/elements/status')
 var webidLogin = require('../lib/webid-utils').loginTLS
 var webidGet = require('webid-get')
 var containersGet = require('../lib/container-utils').get
+var page = require('page')
 
 inherits(App, EventEmitter)
 function App (el, currentWindow) {
@@ -26,7 +27,8 @@ function App (el, currentWindow) {
     webid: null,
     username: 'Anonymous',
     bubbles: [],
-    activeBubble: null
+    activeBubble: null,
+    storage: null
   }
 
   // Views
@@ -35,6 +37,23 @@ function App (el, currentWindow) {
     users: new Users(self),
     status: new Status(self)
   }
+
+  // Router
+  page.base(window.location.pathname)
+  page('/', function (ctx) {
+    self.on('webid-retrieved', function () {
+      page(self.data.storage)
+    })
+  })
+  page('*', function (ctx) {
+    console.log(ctx.path)
+    containersGet(ctx.path, function (err, containers) {
+      if (err) return console.error(err)
+      self.data.bubbles = containers.toArray()
+      render()
+    })
+  })
+  page.start({ hashbang: true })
 
   // Initial DOM tree render
   var tree = self.render()
@@ -59,7 +78,7 @@ function App (el, currentWindow) {
 
     if (webid) {
       self.data.webid = webid
-      return self.emit('webid-logged-in')
+      return self.emit('webid-logged-in', webid)
     }
 
   })
@@ -84,12 +103,8 @@ function App (el, currentWindow) {
         .toArray()[0]
         .object.valueOf()
 
-      containersGet(storage, function (err, containers) {
-        if (err) return console.error(err)
-        self.data.bubbles = containers.toArray()
-        render()
-      })
-
+      self.data.storage = storage
+      self.emit('webid-retrieved')
     })
   })
 
