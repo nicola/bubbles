@@ -19,6 +19,7 @@ var webidGet = require('webid-get')
 var store = new LdpStore(rdf)
 var getName = require('../lib/container-utils').getName
 var page = require('page')
+var SimpleRDF = require('simplerdf')
 
 inherits(App, EventEmitter)
 function App (el, currentWindow) {
@@ -106,33 +107,20 @@ function App (el, currentWindow) {
       self.data.webid = webid
       return self.emit('webid-logged-in', webid)
     }
-
   })
 
   self.on('webid-logged-in', function () {
 
     // Get user profile
-    webidGet(self.data.webid, function (err, profile) {
+    webidGet(self.data.webid, function (err, graph) {
       if (err) return console.error(err)
 
-      self.data.profile = profile
+      self.data.profile = new SimpleRDF(self.data.webid, graph)
+      self.data.username = self.data.profile['http://xmlns.com/foaf/0.1/name']
+      self.data.storage = self.data.profile['http://www.w3.org/ns/pim/space#storage']
 
-      // Setting username
-      self.data.username = profile
-        .match(self.data.webid, 'http://xmlns.com/foaf/0.1/name')
-        .toArray()[0]
-        .object.valueOf()
-
-      render()
-
-      // Setting storage
-      var storage = profile
-        .match(undefined, 'http://www.w3.org/ns/pim/space#storage')
-        .toArray()[0]
-        .object.valueOf()
-
-      self.data.storage = storage
       self.emit('webid-retrieved')
+      render()
     })
   })
 
@@ -154,21 +142,8 @@ App.prototype.render = function () {
   } else if (data.username) {
     top = 'Hello ' + data.username.split(' ')[0]
 
-    backgroundImage = data.profile
-      .match(undefined, 'http://www.w3.org/ns/ui#backgroundImage')
-      .toArray()[0]
-
-    if (backgroundImage) {
-      backgroundImage = backgroundImage.object.valueOf()
-    }
-
-    avatar = data.profile
-      .match(undefined, 'http://xmlns.com/foaf/0.1/img')
-      .toArray()[0]
-
-    if (avatar) {
-      avatar = avatar.object.valueOf()
-    }
+    backgroundImage = data.profile['http://www.w3.org/ns/ui#backgroundImage']
+    avatar = data.profile['http://xmlns.com/foaf/0.1/img']
   }
 
   return h('div.layout', [
