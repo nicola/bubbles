@@ -1,5 +1,7 @@
 module.exports = window.App = App
 
+var LdpStore = require('rdf-store-ldp')
+var rdf = require('rdf-ext')()
 var EventEmitter = require('events').EventEmitter
 var inherits = require('util').inherits
 
@@ -10,10 +12,11 @@ var patch = require('virtual-dom/patch')
 
 var Bubbles = require('../lib/elements/bubbles')
 var Users = require('../lib/elements/users')
+var Resources = require('../lib/elements/resources')
 var Status = require('../lib/elements/status')
 var webidLogin = require('../lib/webid-utils').loginTLS
 var webidGet = require('webid-get')
-var containersGet = require('../lib/container-utils').get
+var store = new LdpStore(rdf)
 var getName = require('../lib/container-utils').getName
 var page = require('page')
 
@@ -35,6 +38,7 @@ function App (el, currentWindow) {
   // Views
   self.views = {
     bubbles: new Bubbles(self),
+    resources: new Resources(self),
     users: new Users(self),
     status: new Status(self)
   }
@@ -48,11 +52,25 @@ function App (el, currentWindow) {
     })
     page('*', function (ctx) {
       self.data.activeBubble = null
-      containersGet(ctx.path, function (err, containers) {
+      store.graph(ctx.path, function (graph, err) {
         if (err) return console.error(err)
-        self.data.bubbles = containers.toArray()
 
-        console.log(self.data.storage, ctx.path)
+        var containers = graph.match(
+          undefined,
+          'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+          'http://www.w3.org/ns/ldp#Container')
+
+        var all = graph.match(
+          undefined,
+          'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+          undefined)
+
+        var resources = rdf.Graph.difference(all, containers)
+
+        self.data.bubbles = containers.toArray()
+        self.data.resources = resources.toArray()
+        console.log(resources)
+
         if (self.data.storage !== ctx.path) {
           self.data.activeBubble = self.data.bubbles[0]
         }
@@ -159,7 +177,10 @@ App.prototype.render = function () {
     ]),
     h('.content', [
       h('.bubbles', [
-        views.bubbles.render(data.bubbles, data.users)
+        views.bubbles.render(data.bubbles || [], data.users)
+      ]),
+      h('.resources', [
+        views.resources.render(data.resources || [])
       ])
     ])
   ])
