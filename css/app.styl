@@ -1,10 +1,46 @@
 @import 'nib'
 
-.bubble
-  border: 1px solid #000
+global-reset()
 
-.sphere
-  width: 40px
-  height: 40px
-  background-color: #ffaabb
-  border-radius: 20px
+body
+  font-family: sans-serif
+  font-weight: 100
+
+.layout
+  width: 500px
+  margin: 0 auto
+
+.status
+  margin-bottom: 1em
+  background-size: cover;
+  .username
+    font-size: 3em
+    text-align: center
+    padding: 2em 0
+  .avatar
+    height: 1em
+    width: 1em
+    vertical-align: middle
+
+.bubbles
+  display: flex
+  flex-wrap: wrap
+  .bubble
+    flex-grow: 0
+    flex-shrink: 0
+    width: 20%
+    display: flex
+    flex-direction: column
+    justify-content: center
+    margin-bottom: 1em
+  .sphere
+    align-self: center
+    width: 4em
+    height: 4em
+    background-color: #ffaabb
+    border-radius: 4em
+    margin: 0.25em 0.25em 0.5em 0.25em
+  .details
+    align-self: center
+    a
+      text-decoration: none

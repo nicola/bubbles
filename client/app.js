@@ -1,5 +1,7 @@
 module.exports = window.App = App
 
+var LdpStore = require('rdf-store-ldp')
+var rdf = require('rdf-ext')()
 var EventEmitter = require('events').EventEmitter
 var inherits = require('util').inherits
 
@@ -10,10 +12,14 @@ var patch = require('virtual-dom/patch')
 
 var Bubbles = require('../lib/elements/bubbles')
 var Users = require('../lib/elements/users')
+var Resources = require('../lib/elements/resources')
 var Status = require('../lib/elements/status')
 var webidLogin = require('../lib/webid-utils').loginTLS
 var webidGet = require('webid-get')
-var containersGet = require('../lib/container-utils').get
+var store = new LdpStore(rdf)
+var getName = require('../lib/container-utils').getName
+var page = require('page')
+var SimpleRDF = require('simplerdf')
 
 inherits(App, EventEmitter)
 function App (el, currentWindow) {
@@ -26,15 +32,55 @@ function App (el, currentWindow) {
     webid: null,
     username: 'Anonymous',
     bubbles: [],
-    activeBubble: null
+    activeBubble: null,
+    storage: null
   }
 
   // Views
   self.views = {
     bubbles: new Bubbles(self),
+    resources: new Resources(self),
     users: new Users(self),
     status: new Status(self)
   }
+
+  // Router
+  page.base(window.location.pathname)
+  self.on('webid-retrieved', function () {
+
+    page('/', function (ctx) {
+      page(self.data.storage)
+    })
+    page('*', function (ctx) {
+      self.data.activeBubble = null
+      store.graph(ctx.path, function (graph, err) {
+        if (err) return console.error(err)
+
+        var containers = graph.match(
+          undefined,
+          'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+          'http://www.w3.org/ns/ldp#Container')
+
+        var all = graph.match(
+          undefined,
+          'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+          undefined)
+
+        var resources = rdf.Graph.difference(all, containers)
+
+        self.data.bubbles = containers.toArray()
+        self.data.resources = resources.toArray()
+        console.log(resources)
+
+        if (self.data.storage !== ctx.path) {
+          self.data.activeBubble = self.data.bubbles[0]
+        }
+
+        render()
+      })
+    })
+    page.start({ hashbang: true })
+  })
 
   // Initial DOM tree render
   var tree = self.render()
@@ -59,37 +105,22 @@ function App (el, currentWindow) {
 
     if (webid) {
       self.data.webid = webid
-      return self.emit('webid-logged-in')
+      return self.emit('webid-logged-in', webid)
     }
-
   })
 
   self.on('webid-logged-in', function () {
 
     // Get user profile
-    webidGet(self.data.webid, function (err, profile) {
+    webidGet(self.data.webid, function (err, graph) {
       if (err) return console.error(err)
 
-      // Setting username
-      self.data.username = profile
-        .match(self.data.webid, 'http://xmlns.com/foaf/0.1/name')
-        .toArray()[0]
-        .object.valueOf()
+      self.data.profile = new SimpleRDF(self.data.webid, graph)
+      self.data.username = self.data.profile['http://xmlns.com/foaf/0.1/name']
+      self.data.storage = self.data.profile['http://www.w3.org/ns/pim/space#storage']
 
+      self.emit('webid-retrieved')
       render()
-
-      // Setting storage
-      var storage = profile
-        .match(undefined, 'http://www.w3.org/ns/pim/space#storage')
-        .toArray()[0]
-        .object.valueOf()
-
-      containersGet(storage, function (err, containers) {
-        if (err) return console.error(err)
-        self.data.bubbles = containers.toArray()
-        render()
-      })
-
     })
   })
 
@@ -100,12 +131,32 @@ App.prototype.render = function () {
   var views = self.views
   var data = self.data
 
+  var top = null
+  var backgroundImage = null
+  var avatar = null
+
+  if (data.activeBubble) {
+    top = getName(data.activeBubble)
+  } else if (!data.webid) {
+    top = 'Logging in'
+  } else if (data.username) {
+    top = 'Hello ' + data.username.split(' ')[0]
+
+    backgroundImage = data.profile['http://www.w3.org/ns/ui#backgroundImage']
+    avatar = data.profile['http://xmlns.com/foaf/0.1/img']
+  }
+
   return h('div.layout', [
     h('.top', [
-      views.status.render(data.username)
+      views.status.render(top, backgroundImage, avatar)
     ]),
     h('.content', [
-      views.bubbles.render(data.bubbles, data.users)
+      h('.bubbles', [
+        views.bubbles.render(data.bubbles || [], data.users)
+      ]),
+      h('.resources', [
+        views.resources.render(data.resources || [])
+      ])
     ])
   ])
 }
