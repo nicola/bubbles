@@ -18,6 +18,7 @@ var webidLogin = require('../lib/webid-utils').loginTLS
 var webidGet = require('webid-get')
 var store = new LdpStore(rdf)
 var getName = require('../lib/container-utils').getName
+var getSubjects = require('../lib/container-utils').getSubjects
 var page = require('page')
 var SimpleRDF = require('simplerdf')
 
@@ -56,24 +57,46 @@ function App (el, currentWindow) {
       store.graph(ctx.path, function (graph, err) {
         if (err) return console.error(err)
 
-        var containers = graph.match(
-          undefined,
-          'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
-          'http://www.w3.org/ns/ldp#Container')
+        var all = rdf.createGraph()
+        var containers = rdf.createGraph()
 
-        var all = graph.match(
-          undefined,
-          'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
-          undefined)
+        var contains = graph
+          .match(
+            undefined,
+            'http://www.w3.org/ns/ldp#contains',
+            undefined)
+        contains
+          .forEach(function (resource) {
+            graph
+              .match(resource.object.valueOf())
+              .forEach(function (triple) {
+                all.add(triple)
+              })
+          })
 
-        var resources = rdf.Graph.difference(all, containers)
+        graph
+          .match(
+            undefined,
+            'http://www.w3.org/1999/02/22-rdf-syntax-ns#type',
+            'http://www.w3.org/ns/ldp#Container')
+          .forEach(function (resource) {
+            graph
+              .match(resource.subject.valueOf())
+              .forEach(function (triple) {
+                containers.add(triple)
+              })
+          })
 
-        self.data.bubbles = containers.toArray()
-        self.data.resources = resources.toArray()
-        console.log(resources)
+        var resources = all.difference(containers)
+
+        self.data.bubbles = containers
+        self.data.resources = resources
+        console.log("all", all.toString())
+        console.log(containers.toString())
+        console.log(resources.toString())
 
         if (self.data.storage !== ctx.path) {
-          self.data.activeBubble = self.data.bubbles[0]
+          self.data.activeBubble = getSubjects(self.data.bubbles)[0]
         }
 
         render()
