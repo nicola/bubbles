@@ -8,6 +8,11 @@ Decentralized system where user owns the data
 - Each bubble is a sort of **folders of data**
 - Bubbles can be **shared**, **public** or **private**
 
+## Thought process
+- User owns the data
+- When I use an application, I tell what bubbles to use
+- Each bubble is an identity
+
 ## Use case
 - I have a TODO list app and I want to switch to an awesome one. With bubbles, instead of rewriting every TODO, I can just link my bubble to the new one
 - Enrico is a doctor and he has a software for managing his patients and a software for doing a medical special treatment. With bubbles, he can plug his "Patients" bubble in both, to have the data syncronized and linked
