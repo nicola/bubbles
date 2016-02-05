@@ -1,8 +1,6 @@
 # bubbles
 
-Decentralized system where user owns the data
-
-## The idea
+Bubbles are Data Containers
 
 - Every user has a set of **bubbles**.
 - Each bubble is a sort of **folders of data**
